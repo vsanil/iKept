@@ -36,10 +36,11 @@ function PollItemCtrl($scope, $routeParams, socket, Poll) {
 	
 	$scope.revote = function() {
 		var pollId = $scope.poll._id,
-				choiceId = $scope.poll.userChoice;
+				choiceId = $scope.poll.userChoice,
+				voteId = $scope.poll.userVote;
 		
 		if(choiceId) {
-			var voteObj = { poll_id: pollId, choice: choiceId };
+			var voteObj = { poll_id: pollId, choice: choiceId, vote:voteId };
 			socket.emit('send:revote', voteObj);
 		} else {
 			alert('You must select an option to vote for');

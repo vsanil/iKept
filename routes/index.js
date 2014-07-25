@@ -35,6 +35,7 @@ exports.poll = function(req, res) {
 		if(poll) {
 			var userVoted = false,
 					userChoice,
+					userVote,
 					totalVotes = 0;
 
 			// Loop through poll choices to determine if user has voted
@@ -48,6 +49,7 @@ exports.poll = function(req, res) {
 
 					if(vote.ip === (req.header('x-forwarded-for') || req.ip)) {
 						userVoted = true;
+						userVote = { _id: vote._id, ip: vote.ip };
 						userChoice = { _id: choice._id, text: choice.text };
 					}
 				}
@@ -56,7 +58,7 @@ exports.poll = function(req, res) {
 			// Attach info about user's past voting on this poll
 			poll.userVoted = userVoted;
 			poll.userChoice = userChoice;
-
+			poll.userVote = userVote;
 			poll.totalVotes = totalVotes;
 		
 			res.json(poll);
@@ -118,8 +120,9 @@ exports.revote = function(socket) {
 		var ip = socket.handshake.headers['x-forwarded-for'] || socket.handshake.address.address;
 		
 		Poll.findById(data.poll_id, function(err, poll) {
-			var choice = poll.choices.id(data.choice);
-			choice.votes.pull({ ip: ip });
+			var choice = poll.choices.id(data.choice._id);
+			var vote = poll.votes.id(data.vote._id);
+			vote.pull({ ip: vote.ip });
 			
 			poll.save(function(err, doc) {
 				var theDoc = { 
@@ -140,7 +143,7 @@ exports.revote = function(socket) {
 						if(vote.ip === ip) {
 							theDoc.userVoted = true;
 							theDoc.userChoice = { _id: choice._id, text: choice.text };
-							
+							//theDoc.userVote = { _id: vote._id, ip: ip };
 						}
 					}
 				}
@@ -178,6 +181,7 @@ exports.vote = function(socket) {
 
 						if(vote.ip === ip) {
 							theDoc.userVoted = true;
+							theDoc.userVote = { _id: vote._id, ip: ip };
 							theDoc.userChoice = { _id: choice._id, text: choice.text };
 							
 						}
