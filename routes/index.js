@@ -120,11 +120,15 @@ exports.revote = function(socket) {
 		var ip = socket.handshake.headers['x-forwarded-for'] || socket.handshake.address.address;
 		
 		Poll.findById(data.poll_id, function(err, poll) {
+			console.log("poll is: " + JSON.stringify(poll,null,4));
 			var choice = poll.choices.id(data.choice._id);
-			var vote = poll.votes.id(data.vote._id);
-			vote.pull({ ip: vote.ip });
+			var vote = choice.votes.id(data.vote._id);
+			if(vote==null) return;
+			console.log("vote: " + vote._id + ":::for : " + poll._id);
 			
-			poll.save(function(err, doc) {
+			//vote.pull({ ip: vote.ip });
+			Poll.update( {'choices.votes._id': vote._id }, {$pull: {'choices.$.votes': {'ip':vote.ip } }}, function(err, doc)  {
+			//poll.save(function(err, doc) {
 				var theDoc = { 
 					question: doc.question, _id: doc._id, choices: doc.choices, 
 					userVoted: false, totalVotes: 0 
@@ -132,7 +136,7 @@ exports.revote = function(socket) {
 
 				// Loop through poll choices to determine if user has voted
 				// on this poll, and if so, what they selected
-				for(var i = 0, ln = doc.choices.length; i < ln; i++) {
+				/*for(var i = 0, ln = doc.choices.length; i < ln; i++) {
 					var choice = doc.choices[i];
 
 					for(var j = 0, jLn = choice.votes.length; j < jLn; j++) {
@@ -146,7 +150,7 @@ exports.revote = function(socket) {
 							//theDoc.userVote = { _id: vote._id, ip: ip };
 						}
 					}
-				}
+				}*/
 				
 				socket.emit('myvote', theDoc);
 				socket.broadcast.emit('vote', theDoc);
