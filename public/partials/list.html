@@ -18,7 +18,8 @@
 	</ul>
 	<ul ng-switch-default>
 		<li ng-repeat="poll in polls | filter:query">
-			<a href="#/poll/{{poll._id}}">{{poll.question}}</a>
+		<button type="submit" ng-click="removePoll(poll._id)" class="btn">-</button>
+		<a href="#/poll/{{poll._id}}">{{poll.question}}</a>
 		</li>
 	</ul>
 </div>

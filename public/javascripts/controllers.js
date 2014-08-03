@@ -1,6 +1,19 @@
 // Controller for the poll list
 function PollListCtrl($scope, Poll) {
 	$scope.polls = Poll.query();
+	
+	$scope.removePoll = function(poll_id) {
+	    Poll.delete({pollId:poll_id}, function(p, resp) {
+	      if(!p.error) {
+				// If there is no error, redirect to the main view
+				$scope.polls = Poll.query();
+				$location.path('polls');
+
+			} else {
+				alert('Could not create poll');
+			}
+	    });
+ };
 }
 
 // Controller for an individual poll
@@ -106,13 +119,13 @@ function PollNewCtrl($scope, $location, Poll) {
 					choiceCount++;
 				}
 			}
-		
+
 			if(choiceCount > 1) {
 				// Create a new poll from the model
 				var newPoll = new Poll(poll);
 				
 				// Call API to save poll to the database
-				newPoll.$save(function(p, resp) {
+				newPoll.$create(function(p, resp) {
 					if(!p.error) {
 						// If there is no error, redirect to the main view
 						$location.path('polls');

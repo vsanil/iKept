@@ -31,9 +31,10 @@ app.get('/', routes.index);
 // MongoDB API Routes
 app.get('/polls/polls', routes.list);
 app.get('/polls/:id', routes.poll);
-app.post('/polls', routes.create);
+app.post('/polls/new', routes.create);
+app.del('/polls/:id', routes.remove);
 app.post('/vote', routes.vote);
-app.post('/revote', routes.revote);
+app.put('/revote', routes.revote);
 
 io.sockets.on('connection', routes.vote);
 io.sockets.on('connection', routes.revote);

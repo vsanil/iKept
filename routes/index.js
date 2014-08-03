@@ -27,6 +27,7 @@ exports.list = function(req, res) {
 
 // JSON API for getting a single poll
 exports.poll = function(req, res) {
+	console.log('inside exports.poll()');
 	// Poll ID comes in the URL
 	var pollId = req.params.id;
 	
@@ -70,12 +71,14 @@ exports.poll = function(req, res) {
 
 // JSON API for creating a new poll
 exports.create = function(req, res) {
+	console.log('inside exports.create()');
+	
 	var reqBody = req.body,
 			// Filter out choices with empty text
 			choices = reqBody.choices.filter(function(v) { return v.text != ''; }),
 			// Build up poll object to save
 			pollObj = {question: reqBody.question, choices: choices};
-				
+
 	// Create poll model from built up poll object
 	var poll = new Poll(pollObj);
 	
@@ -89,23 +92,16 @@ exports.create = function(req, res) {
 	});
 };
 
-//JSON API for removing a poll
-/*
-exports.removePoll = function(req, res) {
-	var reqBody = req.body,
-			choices = reqBody.choices,
-			choice = reqBody.choices.id().votes.id();
-	        vote = reqBody.choices.filter(function(v) { return v.votes != []; }),
-			// Build up poll object to save
-			pollObj = {question: reqBody.question, choices: choices};
-	
-	choices = reqBody.choices.id(data.choice);
-	var poll = new Poll(pollObj);
-	//choice.votes.push({ ip: ip });
-	// Remove a vote from DB
-	
-	poll.save(function(err, doc) {
+exports.remove = function(req, res) {
+	console.log('inside exports.remove()');
+	console.log("Remove: " + JSON.stringify( req.params.id,null,4));
 
+	var pollObj = {_id: req.params.id};
+	// Create poll model from built up poll object
+   var poll = new Poll(pollObj);
+	
+	// Save poll to DB
+	poll.remove(function(err, doc) {
 		if(err || !doc) {
 			throw 'Error';
 		} else {
@@ -113,44 +109,34 @@ exports.removePoll = function(req, res) {
 		}		
 	});
 };
-*/
 
 exports.revote = function(socket) {
+	console.log('inside exports.revote()');
 	socket.on('send:revote', function(data) {
 		var ip = socket.handshake.headers['x-forwarded-for'] || socket.handshake.address.address;
 		
 		Poll.findById(data.poll_id, function(err, poll) {
+			if(err) {
+				console.error(err);
+				return;
+			}
+			
 			console.log("poll is: " + JSON.stringify(poll,null,4));
 			var choice = poll.choices.id(data.choice._id);
 			var vote = choice.votes.id(data.vote._id);
 			if(vote==null) return;
 			console.log("vote: " + vote._id + ":::for : " + poll._id);
 			
-			//vote.pull({ ip: vote.ip });
-			Poll.update( {'choices.votes._id': vote._id }, {$pull: {'choices.$.votes': {'ip':vote.ip } }}, function(err, doc)  {
-			//poll.save(function(err, doc) {
+			Poll.findOneAndUpdate( {'choices.votes._id': vote._id }, {$pull: {'choices.$.votes': {'ip':vote.ip } }}, function(err, doc)  {
+				if (err) {
+					console.log(err);
+					return;
+				}
+				console.log("after update: " + JSON.stringify(doc,null,4));
 				var theDoc = { 
-					question: doc.question, _id: doc._id, choices: doc.choices, 
+					question: doc.question, _id: doc._id, choices: doc.choices,
 					userVoted: false, totalVotes: 0 
 				};
-
-				// Loop through poll choices to determine if user has voted
-				// on this poll, and if so, what they selected
-				/*for(var i = 0, ln = doc.choices.length; i < ln; i++) {
-					var choice = doc.choices[i];
-
-					for(var j = 0, jLn = choice.votes.length; j < jLn; j++) {
-						var vote = choice.votes[j];
-						theDoc.totalVotes++;
-						theDoc.ip = ip;
-
-						if(vote.ip === ip) {
-							theDoc.userVoted = true;
-							theDoc.userChoice = { _id: choice._id, text: choice.text };
-							//theDoc.userVote = { _id: vote._id, ip: ip };
-						}
-					}
-				}*/
 				
 				socket.emit('myvote', theDoc);
 				socket.broadcast.emit('vote', theDoc);
@@ -160,6 +146,7 @@ exports.revote = function(socket) {
 };
 
 exports.vote = function(socket) {
+	console.log('inside exports.vote()');
 	socket.on('send:vote', function(data) {
 		var ip = socket.handshake.headers['x-forwarded-for'] || socket.handshake.address.address;
 		

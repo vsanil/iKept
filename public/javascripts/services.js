@@ -3,7 +3,9 @@ angular.module('pollServices', ['ngResource']).
 	factory('Poll', function($resource) {
 		return $resource('polls/:pollId', {}, {
 			// Use this method for getting a list of polls
-			query: { method: 'GET', params: { pollId: 'polls' }, isArray: true }
+			query: { method: 'GET', params: { pollId: 'polls' }, isArray: true },
+			create: { method: 'POST', params: { pollId: 'new' }},
+			delete: { method: "DELETE", params: { pollId: '@id'} }
 		})
 	}).
 	factory('socket', function($rootScope) {
