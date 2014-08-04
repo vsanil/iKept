@@ -10,7 +10,7 @@ function PollListCtrl($scope, Poll) {
 				$location.path('polls');
 
 			} else {
-				alert('Could not create poll');
+				alert('Could not create poll.');
 			}
 	    });
  };
@@ -43,7 +43,7 @@ function PollItemCtrl($scope, $routeParams, socket, Poll) {
 			var voteObj = { poll_id: pollId, choice: choiceId };
 			socket.emit('send:vote', voteObj);
 		} else {
-			alert('You must select an option to vote for');
+			alert('You must select an option to vote for.');
 		}
 	};
 	
@@ -56,7 +56,7 @@ function PollItemCtrl($scope, $routeParams, socket, Poll) {
 			var voteObj = { poll_id: pollId, choice: choiceId, vote:voteId };
 			socket.emit('send:revote', voteObj);
 		} else {
-			alert('You must select an option to vote for');
+			alert('You must select an option to vote for.');
 		}
 	};
 	
@@ -130,7 +130,10 @@ function PollNewCtrl($scope, $location, Poll) {
 						// If there is no error, redirect to the main view
 						$location.path('polls');
 					} else {
-						alert('Could not create poll');
+						if(p.code='11000')
+							alert('Duplicate poll.');
+						else
+							alert('Could not create poll.');
 					}
 				});
 			} else {

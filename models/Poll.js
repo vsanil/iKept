@@ -11,6 +11,6 @@ var choiceSchema = new mongoose.Schema({
 
 // Document schema for polls
 exports.PollSchema = new mongoose.Schema({
-	question: { type: String, required: true },
+	question: { type: String, required: true, index: {unique: true} },
 	choices: [choiceSchema]
 });

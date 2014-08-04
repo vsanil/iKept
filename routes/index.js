@@ -85,10 +85,12 @@ exports.create = function(req, res) {
 	// Save poll to DB
 	poll.save(function(err, doc) {
 		if(err || !doc) {
-			throw 'Error';
+			console.error(err);
+			err.error=true;
+			res.json(err);
 		} else {
 			res.json(doc);
-		}		
+		}
 	});
 };
 
@@ -103,7 +105,8 @@ exports.remove = function(req, res) {
 	// Save poll to DB
 	poll.remove(function(err, doc) {
 		if(err || !doc) {
-			throw 'Error';
+			err.error=true;
+			res.json(err);
 		} else {
 			res.json(doc);
 		}		
